@@ -1,0 +1,40 @@
+mathtoolbox_v7/
+│
+├── __init__.py
+├── registry.py                     << master TOOL_REGISTRY + routing
+│
+├── core/
+│   ├── numerics.py                 << digital roots, mod systems, entropy, etc.
+│   ├── sequences.py                << Fibonacci, Lucas, TM, Kolakoski, etc.
+│   ├── rare_patterns.py            << rare/exotic sequences
+│   ├── fractals.py                 << Apollonian, gaskets, dragons, etc.
+│   ├── topology.py                 << persistence, filtrations, homology
+│   ├── graphon.py                  << graphon kernels, modulation
+│   ├── elliptic.py                 << elliptic curve arithmetic toolkit
+│   ├── quantum.py                  << quantum walks, transition matrices
+│   ├── zk_oracle.py                << zk-STARK entropy modeling
+│   ├── unlocker.py                 << full mod-x unlocker engine
+│   ├── mining.py                   << nonce, mod-9, GPU heuristics
+│   ├── orchestrator_973.py         << Tool #979 – main meta-engine
+│   ├── orchestrator_tests.py       << mathematical truth suite
+│
+├── fam/
+│   ├── fam_core.py
+│   ├── fam_entropy.py
+│   ├── fam_hybrids.py
+│
+├── interface/
+│   ├── streamlit_ui.py
+│   ├── pyqt6_ui.py
+│
+├── docs/
+│   ├── tools_1_10000.md
+│   ├── 973_math.md
+│   ├── orchestrator_design.md
+│   ├── test_results.pdf
+│
+└── examples/
+    ├── mining_demo.py
+    ├── signal_demo.py
+    ├── unlocker_demo.py
+    ├── orchestrator_demo.py

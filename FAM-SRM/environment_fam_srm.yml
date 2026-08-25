@@ -1,0 +1,15 @@
+name: fam_srm_env
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  - python=3.10
+  - numpy=1.26.4
+  - pip
+  - rasterio
+  - pip:
+      - opencv-python==4.12.0.0
+      - PyQt6
+      - reportlab
+      - pillow
