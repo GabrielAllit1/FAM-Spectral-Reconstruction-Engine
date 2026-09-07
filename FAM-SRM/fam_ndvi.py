@@ -3,8 +3,13 @@
 #
 # NDVI_FAM MODULE
 #
-# This module computes the FAM-enhanced NDVI from:
+# This module computes a FAM-derived normalized vegetation feature index from:
 #     NDVI_FAM = (vnir - R) / (vnir + R + eps)
+#
+# IMPORTANT: vnir is synthesized from RGB by FAM-SRM. NDVI_FAM is therefore
+# a model-derived feature index, not sensor-measured NDVI or physical NIR
+# reflectance. Independent measured-NIR validation is required before treating
+# it as equivalent to conventional multispectral NDVI.
 #
 # Includes:
 #   • CPU-only safe operations
@@ -25,18 +30,23 @@ import os
 # ---------------------------------------------------------------
 def NDVI_FAM(vnir: np.ndarray, R: np.ndarray, eps: float = 1e-6, mode: str = "linear") -> np.ndarray:
     """
-    Compute FAM-enhanced NDVI.
+    Compute the FAM-derived normalized vegetation feature index.
+
+    ``vnir`` is a synthetic channel produced from RGB by FAM-SRM. The result
+    is not sensor-measured NDVI and should not be interpreted as calibrated
+    multispectral reflectance without independent validation.
 
     Parameters
     ----------
     vnir : np.ndarray
-        Virtual NIR channel in [0,1]
+        Synthetic virtual-NIR feature channel in [0,1].
     R : np.ndarray
-        Red channel (normalized [0,1])
+        Red channel (normalized [0,1]).
     eps : float
-        Stabilizer for denominator
+        Stabilizer for denominator.
     mode : str
-        Enhancement mode: 'linear' (scientific/GIS), 'soft' (visualization/PDFs)
+        Output mapping: 'linear' for direct normalized remapping or 'soft'
+        for visualization-oriented contrast compression.
 
     Returns
     -------
@@ -47,11 +57,12 @@ def NDVI_FAM(vnir: np.ndarray, R: np.ndarray, eps: float = 1e-6, mode: str = "li
 
     raw = (vnir - R) / (vnir + R + eps)
 
-    # Enhancement mode selection
+    # Output mapping selection. Neither mapping changes the synthetic-source
+    # claim boundary of vnir/NDVI_FAM.
     if mode == "soft":
-        ndvi = 0.5 + 0.5 * np.tanh(2.0 * raw)  # preserves extremes for visualization
-    else:  # mode == "linear" (default, scientifically accurate)
-        ndvi = (raw + 1.0) / 2.0               # clean linear mapping
+        ndvi = 0.5 + 0.5 * np.tanh(2.0 * raw)  # visualization mapping
+    else:  # mode == "linear" (default)
+        ndvi = (raw + 1.0) / 2.0               # direct linear remapping
 
     # Clip and return
     ndvi = np.clip(ndvi, 0, 1)
@@ -71,7 +82,7 @@ NDVI_COLORMAPS = {
 
 def save_ndvi_colormaps(ndvi: np.ndarray, out_prefix: str) -> dict:
     """
-    Save multiple NDVI colormap variants for PDF export.
+    Save multiple NDVI_FAM colormap variants for PDF export.
 
     Parameters
     ----------
@@ -84,11 +95,11 @@ def save_ndvi_colormaps(ndvi: np.ndarray, out_prefix: str) -> dict:
     dict : {colormap_name: file_path}
     """
     if ndvi.ndim != 2:
-        raise ValueError("NDVI must be a 2D single-channel array.")
+        raise ValueError("NDVI_FAM must be a 2D single-channel array.")
 
     cmap_outputs = {}
 
-    # Convert NDVI to 0–255 uint8
+    # Convert normalized index to 0–255 uint8 for display.
     ndvi8 = (np.clip(ndvi, 0, 1) * 255).astype(np.uint8)
 
     for name, cmap in NDVI_COLORMAPS.items():
@@ -101,11 +112,11 @@ def save_ndvi_colormaps(ndvi: np.ndarray, out_prefix: str) -> dict:
 
 
 # ---------------------------------------------------------------
-# NDVI Legend Generator
+# NDVI_FAM Legend Generator
 # ---------------------------------------------------------------
 def save_ndvi_legend(out_path: str, cmap=cv2.COLORMAP_JET):
     """
-    Save a horizontal NDVI legend colorbar (0→1).
+    Save a horizontal normalized-index legend colorbar (0→1).
     """
     bar = np.tile(np.linspace(0, 255, 256).astype(np.uint8), (35, 1))
     bar_c = cv2.applyColorMap(bar, cmap)
@@ -113,11 +124,11 @@ def save_ndvi_legend(out_path: str, cmap=cv2.COLORMAP_JET):
 
 
 # ---------------------------------------------------------------
-# NDVI Histogram Generator
+# NDVI_FAM Histogram Generator
 # ---------------------------------------------------------------
 def save_ndvi_histogram(ndvi: np.ndarray, out_path: str):
     """
-    Save a histogram image for NDVI distribution.
+    Save a histogram image for the normalized NDVI_FAM distribution.
     """
     arr = np.clip(ndvi.flatten(), 0, 1)
     hist = np.histogram(arr, bins=64, range=(0, 1))[0]
